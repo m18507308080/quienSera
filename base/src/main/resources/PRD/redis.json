@@ -1,0 +1,1 @@
+[{"id":"config","descr":"config","ip":"10.171.31.113","port":9736,"password":"4ee41beff41e3021ac5b724131776ff7","maxWaitMillis":2000,"maxIdle":10,"maxTotal":100,"testOnBorrow":true,"testOnReturn":true,"testWhileIdle":true,"blockWhenExhausted":true}]
