@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.quien.sera.dao.GenericIndexDAOImplMapper">
+
+    <update id="update" parameterType="map">
+        update ${table_name} 
+        set indexField=#{indexField}, 
+            version=version+1,
+            updatedDatetime=#{updatedDatetime}
+        where sid=#{sid} and version=#{version}
+    </update>
+
+    <update id="batchUpdate" parameterType="map">
+        <foreach item="e" collection="values" open="" separator=";" close="">
+            update ${e.table_name} 
+            set indexField=#{e.indexField}, 
+                version=version+1,
+                updatedDatetime=#{e.updatedDatetime}
+            where sid=#{e.sid} and version=#{version}
+        </foreach>        
+    </update>
+
+</mapper> 

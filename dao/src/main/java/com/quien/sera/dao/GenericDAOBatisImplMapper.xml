@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.quien.sera.dao.GenericDAOBatisImplMapper">
+    
+    <insert id="batchInsertInOneTable" parameterType="map">
+        insert into ${table_name}
+        <foreach item="field" index="index" collection="fields" open="("
+            separator="," close=")">
+            `${field}`
+        </foreach>
+        values
+        <foreach item="list" index="index" collection="values" separator=",">
+	        <foreach item="value" index="index" collection="list" open="("
+	            separator="," close=")">
+	            #{value}
+	        </foreach>        
+        </foreach>        
+    </insert>
+
+    
+    <insert id="batchInsert" parameterType="map">
+        <foreach index="tableName" item="fieldsValues" collection="tablesWithFieldsValues" separator=";">
+            insert into ${tableName}
+            <foreach item="field" collection="fieldsValues.xfields" open="("
+                separator="," close=")">
+                `${field}`
+            </foreach>
+            values
+            <foreach item="values" collection="fieldsValues.xvalues" separator=",">
+                <foreach item="value" collection="values" open="("
+                    separator="," close=")">
+                    #{value}
+                </foreach>      
+            </foreach>     
+        </foreach>
+        ;
+    </insert>
+
+    <select id="findBySid" parameterType="map" resultType="map">
+        select * from ${table_name} 
+        where sid=#{sid} 
+        <if test="ignoreFlag==false">
+            and actived=true and deleted=false
+        </if>
+    </select>
+
+    <select id="findBySids" parameterType="map" resultType="map">
+        <foreach item="sids" index="tableName" collection="tablesWithSids" open="" separator=" union " close="">
+            select * from ${tableName} 
+            where sid in
+            <foreach item="sid" index="index" collection="sids" open="("
+                separator="," close=")">
+                #{sid}
+            </foreach>
+            <if test="ignoreFlag==false">
+                and actived=true and deleted=false
+            </if>
+        </foreach>
+    </select>
+
+    <select id="selectAll" parameterType="map" resultType="map">
+        select * from ${table_name} where actived=true and deleted=false
+    </select>
+
+    <select id="selectByRange" parameterType="map" resultType="map">
+        <foreach item="range" collection="ranges" open="" separator=" union " close="">
+            (select * from ${table_name}${range.tableSplitIndex}
+            where actived=true and deleted=false
+            order by ${orderBy} ${order}
+            limit ${range.i},${range.m})
+        </foreach>
+    </select>
+
+    <select id="selectTheFirstOnePerTable" parameterType="map" resultType="map">
+        <foreach item="tableName" collection="tableNames" open="" separator=" union " close="">
+            (select * from ${tableName} order by createdTimestamp asc limit 1)
+        </foreach>
+    </select>
+
+    <select id="selectByRelation" parameterType="map" resultType="map">
+        select t.* from ${relationTable} r
+        inner join ${targetTable} t on r.${relationFieldName} = t.${targetFieldName}
+        where 
+        <if test="datetime != null">
+            t.createdTimestamp ${op} #{datetime} and 
+        </if>
+        <foreach item="sid" collection="excludeSids" open="" separator=" " close="">
+            <if test="sid != null and sid > 0"> sid != #{sid} and </if>
+        </foreach>
+            t.actived=true and t.deleted=false
+        order by t.createdTimestamp ${order}
+        limit 0,${n}
+    </select>
+
+    <select id="selectByMaster" parameterType="map" resultType="map">
+        select * from ${table_name}
+        where ${masterSidFieldName}=#{masterSid} 
+        <if test="datetime != null">
+            and createdTimestamp ${op} #{datetime} 
+        </if>
+        <foreach item="sid" collection="excludeSids" open="" separator=" " close="">
+            <if test="sid != null and sid > 0"> and sid != #{sid} </if>
+        </foreach>
+            and actived=true and deleted=false
+        order by createdTimestamp ${order}
+        limit 0,${n}
+    </select>
+
+    <update id="deleteBySid" parameterType="map">
+        update ${table_name} set deleted=true where sid=#{sid}
+    </update>
+
+    <update id="batchDeleteBySids" parameterType="map">
+        <foreach item="sids" index="tableName" collection="tablesWithSids" open="" separator=";" close="">
+            update ${tableName} set deleted=true
+            where sid in
+            <foreach item="sid" index="index" collection="sids" open="("
+                separator="," close=")">
+                #{sid}
+            </foreach>
+        </foreach>
+    </update>
+
+    <update id="increaseFieldValue" parameterType="map">
+        update ${table_name} set ${fieldName}=${fieldName}+#{n}
+        <if test="updatedDatetime != null">
+            , updatedDatetime=#{updatedDatetime}
+        </if>
+        where sid=${sid}
+    </update>
+
+    <update id="resetFieldValue" parameterType="map">
+        update ${table_name} set ${fieldName}=0
+        where sid=${sid}
+    </update>
+
+    <update id="setActived" parameterType="map">
+        update ${table_name} set actived=#{actived} where sid=#{sid}
+    </update>
+    
+</mapper> 
